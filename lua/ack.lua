@@ -1,4 +1,4 @@
--- Should probably performed via MULTI-EXEC
+-- Should be probably performed via MULTI-EXEC
 
 -- KEYS[1] ack table
 -- KEYS[2] items table

@@ -44,7 +44,7 @@ class Queue(object):
     async def _load_scripts(self):
         for key in load_scripts.__all__:
             name, script = getattr(load_scripts, key)()
-            self._lua_sha[name] = await self._redis.load_script(script)
+            self._lua_sha[name] = await self._redis.script_load(script)
 
     def _put_pipe(self, task_id, task_payload):
         transaction = self._redis.multi_exec()

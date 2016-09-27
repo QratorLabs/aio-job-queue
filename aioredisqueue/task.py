@@ -1,4 +1,5 @@
 import timeit
+import uuid
 
 
 class Task(object):
@@ -9,6 +10,14 @@ class Task(object):
     @staticmethod
     def generate_ack_info():
         return int(timeit.default_timer() * 1000)
+
+    @staticmethod
+    def generate_id(payload=None):
+        return str(uuid.uuid4())
+
+    @staticmethod
+    def format_payload(payload):
+        return payload
 
     def __init__(self, queue, task_id, payload, ack_info, *, status=1):
         self._queue = queue

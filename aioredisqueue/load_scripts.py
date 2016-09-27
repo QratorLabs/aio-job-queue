@@ -10,12 +10,12 @@ __all__ = ('load_put', 'load_ack', 'load_fail', 'load_requeue',
 def _load(name):
     filename = name + os.extsep + 'lua'
     try:
-        return pkg_resources.resource_string('aioredisqueue',
-                                             os.path.join('lua', filename))
+        path = os.path.join('lua', filename)
+        return name, pkg_resources.resource_string('aioredisqueue', path)
     except FileNotFoundError:
         here = os.path.dirname(os.path.abspath(__file__))
         with open(os.path.join(here, 'lua', filename), 'rb') as fobj:
-            return fobj.read()
+            return name, fobj.read()
 
 def load_put():
     return _load('put')

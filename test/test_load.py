@@ -12,7 +12,7 @@ def script_load_func(request):
 
 def test_load_script(script_load_func):
 
-    script = script_load_func()
+    name, script = script_load_func()
 
     assert script.startswith(b'--')
     assert b'return' in script

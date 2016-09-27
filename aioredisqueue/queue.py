@@ -140,7 +140,7 @@ class Queue(object):
 
         return await self._redis.evalsha(
             self._lua_sha['fail'],
-            keys=[self._keys['ack'], self._keys['payload']],
+            keys=[self._keys['ack'], self._keys['queue']],
             args=[task_id],
         )
 

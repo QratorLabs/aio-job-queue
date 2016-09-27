@@ -63,7 +63,7 @@ class Queue(object):
         )
 
     def put(self, task, method='lua'):
-        task_id = self._task_class.generage_id()
+        task_id = self._task_class.generate_id()
         task_payload = self._task_class.format_payload(task)
 
         if method == 'lua':

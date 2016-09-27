@@ -6,7 +6,7 @@ from . import task, load_scripts, exceptions
 class Queue(object):
 
     def __init__(self, redis, key_prefix='aioredisqueue_', *,
-                 main_queue_key=None
+                 main_queue_key=None,
                  fetching_fifo_key=None,
                  payloads_hash_key=None,
                  ack_hash_key=None,
@@ -78,7 +78,7 @@ class Queue(object):
             await self._load_scripts()
 
         result = await self._redis.evalsha(
-            self._lua_sha[script]
+            self._lua_sha[script],
             keys=[self._keys[key], self._keys['ack'], self._keys['payload']],
             args=[ack_info],
         )
@@ -99,17 +99,16 @@ class Queue(object):
 
     async def get(self, retry_interval=1):
         while self._loop.is_running():
-            try:
-                result = await self._redis.brpoplpush(self._keys['queue'],
-                                                      self._keys['fifo'],
-                                                      timeout=retry_interval)
-                if result is None:
-                    continue
+            result = await self._redis.brpoplpush(self._keys['queue'],
+                                                  self._keys['fifo'],
+                                                  timeout=retry_interval)
+            if result is None:
+                continue
 
-                try:
-                    return await self.get_nowait()
-                except exceptions.Empty:
-                    continue
+            try:
+                return await self.get_nowait()
+            except exceptions.Empty:
+                continue
 
     def _ack_pipe(self, task_id):
         transaction = self._redis.multi_exec()
@@ -125,7 +124,7 @@ class Queue(object):
 
         return await self._redis.evalsha(
             self._lua_sha['ack'],
-            keys=[self._keys['ack'], self._keys['payload']]
+            keys=[self._keys['ack'], self._keys['payload']],
             args=[task_id],
         )
 
@@ -150,7 +149,7 @@ class Queue(object):
             await self._load_scripts()
 
         return await self._redis.evalsha(
-            self._lua_sha['requeue']
+            self._lua_sha['requeue'],
             keys=[self._keys['ack'], self._keys['queue']],
             args=[before],
         )

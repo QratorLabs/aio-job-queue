@@ -18,7 +18,7 @@ class Queue(object):
             main_queue_key = key_prefix + 'queue'
 
         if fetching_fifo_key is None:
-            fetching_fifo_key = key_pefix + 'fetching'
+            fetching_fifo_key = key_prefix + 'fetching'
 
         if payloads_hash_key is None:
             payloads_hash_key = key_prefix + 'payloads'

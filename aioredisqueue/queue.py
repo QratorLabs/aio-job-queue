@@ -82,8 +82,8 @@ class Queue(object):
             keys=[self._keys[key], self._keys['ack'], self._keys['payload']],
             args=[ack_info],
         )
-        if result[0] == 'ok':
-            return result[1]
+        if result[0] == b'ok':
+            return self._task_class(self, result[1], result[2], ack_info)
         else:
             raise exceptions.Empty(result[0])
 

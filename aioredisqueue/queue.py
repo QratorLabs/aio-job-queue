@@ -102,9 +102,6 @@ class Queue(object):
             result = await self._redis.brpoplpush(self._keys['queue'],
                                                   self._keys['fifo'],
                                                   timeout=retry_interval)
-            if result is None:
-                continue
-
             try:
                 return await self.get_nowait()
             except exceptions.Empty:

@@ -47,12 +47,11 @@ class Queue(object):
             name, script = getattr(load_scripts, key)()
 
             if name in self._lua_sha:
-                # another coroutine handles it
+                # another coroutine is handling it
                 continue
 
             self._lua_sha[name] = None
             self._lua_sha[name] = await self._redis.script_load(script)
-
 
     def _put_pipe(self, task_id, task_payload):
         transaction = self._redis.multi_exec()

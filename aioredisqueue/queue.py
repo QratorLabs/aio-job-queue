@@ -42,9 +42,17 @@ class Queue(object):
         self._lua_sha = lua_sha if lua_sha is not None else {}
 
     async def _load_scripts(self):
+
         for key in load_scripts.__all__:
             name, script = getattr(load_scripts, key)()
+
+            if name in self._lua_sha:
+                # another coroutine handles it
+                continue
+
+            self._lua_sha[name] = None
             self._lua_sha[name] = await self._redis.script_load(script)
+
 
     def _put_pipe(self, task_id, task_payload):
         transaction = self._redis.multi_exec()
@@ -99,9 +107,9 @@ class Queue(object):
 
     async def get(self, retry_interval=1):
         while self._loop.is_running():
-            result = await self._redis.brpoplpush(self._keys['queue'],
-                                                  self._keys['fifo'],
-                                                  timeout=retry_interval)
+            await self._redis.brpoplpush(self._keys['queue'],
+                                         self._keys['fifo'],
+                                         timeout=retry_interval)
             try:
                 return await self.get_nowait()
             except exceptions.Empty:

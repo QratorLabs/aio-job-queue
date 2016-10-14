@@ -40,18 +40,28 @@ class Queue(object):
         self._loop = loop
         self._task_class = task_class
         self._lua_sha = lua_sha if lua_sha is not None else {}
+        self._locks = {}
 
-    async def _load_scripts(self):
+    async def _load_scripts(self, primary):
 
         for key in load_scripts.__all__:
             name, script = getattr(load_scripts, key)()
 
             if name in self._lua_sha:
-                # another coroutine is handling it
+                if name == primary:
+                    return
                 continue
 
-            self._lua_sha[name] = None
+            if name in self._locks:
+                if name == primary:
+                    async with self._locks[name]:
+                        return
+                continue
+
+            self._locks[name] = asyncio.Semaphore(loop=self._loop)
             self._lua_sha[name] = await self._redis.script_load(script)
+            await self._locks[name].release()
+            del self._locks[name]
 
     def _put_pipe(self, task_id, task_payload):
         transaction = self._redis.multi_exec()
@@ -61,7 +71,7 @@ class Queue(object):
 
     async def _put_lua(self, task_id, task_payload):
         if 'put' not in self._lua_sha:
-            await self._load_scripts()
+            await self._load_scripts('put')
 
         return await self._redis.evalsha(
             self._lua_sha['put'],
@@ -82,7 +92,7 @@ class Queue(object):
 
     async def _get_nowait(self, ack_info, script='get_nowait_l', key='fifo'):
         if script not in self._lua_sha:
-            await self._load_scripts()
+            await self._load_scripts(script)
 
         result = await self._redis.evalsha(
             self._lua_sha[script],
@@ -124,7 +134,7 @@ class Queue(object):
 
     async def _ack_lua(self, task_id):
         if 'ack' not in self._lua_sha:
-            await self._load_scripts()
+            await self._load_scripts('ack')
 
         return await self._redis.evalsha(
             self._lua_sha['ack'],
@@ -140,7 +150,7 @@ class Queue(object):
 
     async def _fail(self, task_id):
         if 'fail' not in self._lua_sha:
-            await self._load_scripts()
+            await self._load_scripts('fail')
 
         return await self._redis.evalsha(
             self._lua_sha['fail'],
@@ -150,7 +160,7 @@ class Queue(object):
 
     async def _requeue(self, before=None):
         if 'requeue' not in self._lua_sha:
-            await self._load_scripts()
+            await self._load_scripts('requeue')
 
         return await self._redis.evalsha(
             self._lua_sha['requeue'],

@@ -58,10 +58,12 @@ class Queue(object):
                         return
                 continue
 
-            self._locks[name] = asyncio.Semaphore(loop=self._loop)
-            self._lua_sha[name] = await self._redis.script_load(script)
-            await self._locks[name].release()
-            del self._locks[name]
+            self._locks[name] = asyncio.Semaphore(0, loop=self._loop)
+            try:
+                self._lua_sha[name] = await self._redis.script_load(script)
+            finally:
+                await self._locks[name].release()
+                del self._locks[name]
 
     def _put_pipe(self, task_id, task_payload):
         transaction = self._redis.multi_exec()

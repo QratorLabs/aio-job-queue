@@ -12,7 +12,7 @@ setup(
     install_requires=(
         'aioredis',
     ),
-    package_data={'aioresdisqueue': (
+    package_data={'aioredisqueue': (
         os.path.join('lua', '*' + os.path.extsep + 'lua'),
     )},
 )

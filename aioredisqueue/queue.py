@@ -62,7 +62,7 @@ class Queue(object):
             try:
                 self._lua_sha[name] = await self._redis.script_load(script)
             finally:
-                await self._locks[name].release()
+                self._locks[name].release()
                 del self._locks[name]
 
     def _put_pipe(self, task_id, task_payload):

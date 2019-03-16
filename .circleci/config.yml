@@ -1,18 +1,41 @@
 version: 2.1
 
 jobs:
-  build:
+  test:
+    parameters:
+      python-image:
+        type: string
+
+      sudo:
+        type: boolean
+        default: true
+
     docker:
-      - image: circleci/python:3.7
+      - image: << parameters.python-image >>
       - image: circleci/redis:5
 
     steps:
       - checkout
 
-      - run: sudo chown -R circleci:circleci /usr/local/bin
-      - run: sudo chown -R circleci:circleci /usr/local/lib/python3.7/site-packages
-      - run: pip install -e .[test]
+      - run: <<# parameters.sudo >> sudo <</ parameters.sudo >> pip install -e .[test]
 
       - run: pytest --junitxml=test-reports/junit.xml --verbose --showlocals --color=yes
       - store_test_results:
           path: test-reports
+
+workflows:
+  tests:
+    jobs:
+      - test:
+          name: test-python35
+          python-image: 'circleci/python:3.5'
+      - test:
+          name: test-python36
+          python-image: 'circleci/python:3.6'
+      - test:
+          name: test-python37
+          python-image: 'circleci/python:3.7'
+      - test:
+          name: test-pypy3
+          python-image: 'pypy:3'
+          sudo: false

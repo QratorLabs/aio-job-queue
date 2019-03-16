@@ -12,6 +12,9 @@ setup(
     install_requires=(
         'aioredis',
     ),
+    extras_require={
+        'test': ['pytest'],
+    },
     package_data={'aioredisqueue': (
         os.path.join('lua', '*' + os.path.extsep + 'lua'),
     )},

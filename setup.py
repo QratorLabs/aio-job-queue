@@ -13,7 +13,7 @@ setup(
         'aioredis',
     ),
     extras_require={
-        'test': ['pytest'],
+        'test': ['pytest', 'pytest-asyncio'],
     },
     package_data={'aioredisqueue': (
         os.path.join('lua', '*' + os.path.extsep + 'lua'),

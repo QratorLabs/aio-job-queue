@@ -10,7 +10,7 @@
 `Redis` object should be created before `Queue` init. This way you may use the
 same connecton to Redis for different purposes in your program.
 
-```
+```python
 import asyncio
 import aioredis
 import aioredisqueue

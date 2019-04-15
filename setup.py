@@ -1,6 +1,6 @@
 import os.path
 
-from setuptools import setup, find_packages
+from setuptools import find_packages, setup
 
 
 setup(
@@ -14,6 +14,7 @@ setup(
     ),
     extras_require={
         'test': ['pytest', 'pytest-asyncio'],
+        'yaml-serializer': ['pyyaml']
     },
     package_data={'aioredisqueue': (
         os.path.join('lua', '*' + os.path.extsep + 'lua'),

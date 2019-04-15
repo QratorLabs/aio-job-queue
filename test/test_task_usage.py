@@ -9,7 +9,7 @@ async def test_basic_put_get_and_get():
 	r = await aioredis.create_redis(('localhost', 6379), db=0)
 	queue = aioredisqueue.queue.Queue(r)
 	
-	message = b'payload'
+	message = 'payload string 1'
 	await queue.put(message)
 	result = await queue.get()
 	assert result.payload == message
@@ -38,7 +38,7 @@ async def test_ack():
 	r = await aioredis.create_redis(('localhost', 6379), db=0)
 	queue = aioredisqueue.queue.Queue(r)
 	
-	message = b'payload'
+	message = 'payload string 2'
 	await queue.put(message)
 	await get_ack(queue)
 
@@ -48,6 +48,6 @@ async def test_fail_ack():
 	r = await aioredis.create_redis(('localhost', 6379), db=0)
 	queue = aioredisqueue.queue.Queue(r)
 	
-	message = b'payload'
+	message = 'payload string 3'
 	await queue.put(message)
 	await get_fail_ack(queue)

@@ -4,15 +4,32 @@ from . import task, load_scripts, exceptions
 
 
 class Queue(object):
-
-    def __init__(self, redis, key_prefix='aioredisqueue_', *,
-                 main_queue_key=None,
-                 fetching_fifo_key=None,
-                 payloads_hash_key=None,
-                 ack_hash_key=None,
-                 task_class=task.Task,
-                 lua_sha=None,
+    def __init__(self, redis, *, key_prefix=None, 
+                 serialization_method='pickle', main_queue_key=None,
+                 fetching_fifo_key=None, payloads_hash_key=None,
+                 ack_hash_key=None, task_class=task.Task, lua_sha=None,
                  loop=None):
+        """
+        Redis implementation of asynchronous job queue
+
+        Args :
+            serialization_method (str): A string that specifies the way payload
+                is encoded and decoded. Default supported serialization method
+                s are `raw`, `json`, `pickle` and `dynamic`.
+
+                When using `raw` you must pass binary payload when creating a
+                task and be aware of getting it as a result when taking a task
+                from queue. `None` as `serialization_method` is the same as
+                `raw`.
+
+                `dynamic` method enables to specify `serialization_method` for
+                each task, namely as a keyword argument in `put` method
+        """
+        if serialization_method is None:
+            serialization_method = 'raw'
+
+        if key_prefix is None:
+            key_prefix = 'aioredisqueue_' + serialization_method
 
         if main_queue_key is None:
             main_queue_key = key_prefix + 'queue'
@@ -41,9 +58,9 @@ class Queue(object):
         self._task_class = task_class
         self._lua_sha = lua_sha if lua_sha is not None else {}
         self._locks = {}
+        self._serialization_method = serialization_method
 
     async def _load_scripts(self, primary):
-
         for key in load_scripts.__all__:
             name, script = getattr(load_scripts, key)()
 
@@ -81,9 +98,13 @@ class Queue(object):
             args=[task_id, task_payload],
         )
 
-    def put(self, task, method='lua'):
-        task_id = self._task_class.generate_id()
-        task_payload = self._task_class.format_payload(task)
+    def put(self, task, serialization_method='pickle', method='lua'):
+        if self._serialization_method != 'dynamic':
+            serialization_method = self._serialization_method
+
+        task_id = self._task_class.generate_id(serialization_method)
+        task_payload = self._task_class.encode_payload(task,
+                                                       serialization_method)
 
         if method == 'lua':
             return self._put_lua(task_id, task_payload)
@@ -102,7 +123,8 @@ class Queue(object):
             args=[ack_info],
         )
         if result[0] == b'ok':
-            return self._task_class(self, result[1], result[2], ack_info)
+            payload = self._task_class.decode_payload(result[1], result[2])
+            return self._task_class(self, result[1], payload, ack_info)
         else:
             raise exceptions.Empty(result[0])
 

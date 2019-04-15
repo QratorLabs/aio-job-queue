@@ -31,6 +31,26 @@ async def process_jobs():
 loop.run_until_complete(process_jobs)
 ```
 
+## Serialization methods:
+
+There are several serialization methods available by default : `json`, `pickle`
+(default), `raw`. If `pyyaml` library is installed, `yaml` can be used as well.
+If `serialization_method` is specified when initializing `Queue`, it is a 
+default for all the tasks created in this queue. It can be also specified for 
+each task in `Queue.put()`. 
+
+As well as using default methods, custom ones can be registered. To do it two 
+callables need to be provided, one for decoding the payload from binary 
+representation and one for encoding. A very naive example that works in 
+Python3.6+ :
+
+```python
+from aioredisqueue.serializers import register
+
+register('my_serializer', json.loads, json.dumps)
+```
+
+
 ## Non-standard features:
 
 All methods are coroutines, even `get_nowait`. That's because calls to redis are

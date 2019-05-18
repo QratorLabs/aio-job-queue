@@ -35,19 +35,23 @@ loop.run_until_complete(process_jobs)
 
 There are several serialization methods available by default : `json`, `pickle`
 (default), `raw`. If `pyyaml` library is installed, `yaml` can be used as well.
-If `serialization_method` is specified when initializing `Queue`, it is a 
-default for all the tasks created in this queue. It can be also specified for 
-each task in `Queue.put()`. 
+If `serialization_method` is specified when initializing `Queue`, it is used
+for all the tasks created in the queue. It can be also overridden for 
+each task in `Queue.put()`.
 
-As well as using default methods, custom ones can be registered. To do it two 
-callables need to be provided, one for decoding the payload from binary 
+Custom serialization methods can be registered. To do it one needs to
+provide two callables, one for decoding the payload from binary 
 representation and one for encoding. A very naive example that works in 
-Python3.6+ :
+Python3.6+ (by default we encode and decode JSON strings to and from bytes):
 
 ```python
 from aioredisqueue.serializers import register
 
-register('my_serializer', json.loads, json.dumps)
+register(
+    'my_json',
+    json.loads,
+    lambda obj: json.dumps(obj, ensure_ascii=False).encode('utf8'),
+)
 ```
 
 
@@ -62,7 +66,6 @@ performed during each such call.
 - `loop` may be deleted from constructor params
 
 ### New features
-- Task classes with built-in serialization support
 - `max_items` limit support: current version of `put` method will
   be renamed into `put_nowait`.
 - `get_multi` and `put_multi` methods, allowing getting and putting multiple
